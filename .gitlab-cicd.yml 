@@ -1,0 +1,49 @@
+stages:
+  - build
+  - test
+variables:
+  GITLAB_SERVER: "http://192.168.222.130"
+# Строим Docker образ
+build_image:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t winter .
+    - docker run -d -p 8080:8000 --name wintercms winter
+  only:
+    - main
+
+# Тестируем приidgfложение с помощью curl
+test_backend:
+  stage: test
+  image: curlimages/curl:latest
+  script:
+    - sleep 20  # Ожидаем, пока сервер запустится
+    - response=$(curl -s http://192.168.222.130:8080/backend)
+    # Проверяем
+    - echo "$response" | grep -q "<title>Administration Area</title>"
+    # Если проверка неудачна, то выводим ошибку и завершаем с exit code
+    - | 
+      if [ $? -ne 0 ]; then
+          echo "Ошибка: Ожидался <title>Administration Area</title>, но получен другой ответ.";
+          exit 1;
+        else
+          echo "Backend тест пройден успешно!";
+        fi
+
+
+    - response=$(curl -s http://localhost:8080/main)
+    # Проверяем, содержит ли ответ <title>Winter CMS - AJAX framework</title>
+    - echo "$response" | grep -q "<title>Winter CMS - AJAX framework</title>"
+    # Если проверка неудачна, то выводим ошибку и завершаем с exit code
+    - |
+      if [ $? -ne 0 ]; then
+          echo "Ошибка: Ожидался <title>Winter CMS - AJAX framework</title>, но получен другой ответ.";
+          exit 1;
+        else
+          echo "Main тест пройден успешно!";
+        fi
+  only:
+    - main
