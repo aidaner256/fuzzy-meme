@@ -16,18 +16,4 @@ if [ "${INIT_WINTER,,}" == "true" ]; then
   php artisan winter:up
 fi
 
-# Runs all Winter CMS unit tests. Pass test filename to run a specific test.
-if [ ! -z "$UNIT_TEST" ]; then
-  echo -e "Winter CMS Unit Test..."
-  if [ "${UNIT_TEST,,}" == "true" ]; then
-    vendor/bin/phpunit
-  elif [ ! -f "$UNIT_TEST" ]; then
-    echo "File '$UNIT_TEST' does not exist."
-  elif [ -f "$UNIT_TEST" ]; then
-    echo "Running single test: $UNIT_TEST"
-    vendor/bin/phpunit $UNIT_TEST
-  fi
-  echo "---"
-fi
-
 exec "$@"
