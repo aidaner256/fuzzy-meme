@@ -1,9 +1,9 @@
-version: '2.2'
+version: '2.3'
 
 services:
   wintercms:
     build:
-      context: .
+      context: ./wintercms
       dockerfile: Dockerfile
     container_name: wintercms_app
     environment:
@@ -19,11 +19,11 @@ services:
       db:
         condition: service_healthy
     mem_limit: 4g
-    command: sh -c "php artisan migrate && php artisan serve --host=0.0.0.0 --port=8000"
+    command: sh -c "php artisan migrate && php artisan serve --host=0.0.0.0 --port=8001"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.wintercms.rule=Host(`localhost`)"  
-      - "traefik.http.services.wintercms.loadbalancer.server.port=8000"
+      - "traefik.http.services.wintercms.loadbalancer.server.port=8001"
     networks:
       - app-network
 
@@ -50,9 +50,9 @@ services:
     image: nginx:latest
     container_name: nginx
     volumes:
-      - /Users/aidaner/Desktop/tz/nginx:/etc/nginx
+      - /Users/aidaner/Desktop/tz/nginx/default.conf:/etc/nginx/default.conf
     ports:
-      - "8000:80"
+      - "8080:80"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nginx.rule=Host(`localhost`)"
@@ -61,8 +61,7 @@ services:
       - app-network
 
   traefik:
-    build:
-      context: ./traefik 
+    image: traefik:v2.9
     container_name: traefik
     command:
       - "--api.insecure=true"
@@ -72,7 +71,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080" 
+      - "8081:8080" 
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     networks:

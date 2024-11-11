@@ -24,10 +24,10 @@
 ## Запуск проекта с нуля
 
 1. **Клонируйте репозиторий:**
-
-   git clone <URL вашего репозитория>
-   cd <папка вашего репозитория>
-
+   ```
+   git clone https://github.com/aidaner256/fuzzy-meme.git
+   cd fuzzy-meme
+   ```
 2. **Соберите и запустите контейнеры:**
    docker build -t winter .  
 
