@@ -63,9 +63,9 @@ RUN echo 'APP_ENV=docker\nDB_CONNECTION=mysql\nDB_HOST=host.docker.internal\nDB_
 
 # Get Laravel env config files
 COPY config/docker config/docker
-RUN php artisan migrate
+# RUN php artisan migrate
 # Install dependencies
-RUN composer install
+# RUN composer install
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html && \
