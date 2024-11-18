@@ -1,31 +1,30 @@
-version: '2.3'
-
 services:
   wintercms:
     build:
       context: ./wintercms
       dockerfile: Dockerfile
     container_name: wintercms_app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wintercms.rule=Host(`localhost`)"
+      - "traefik.http.services.wintercms.loadbalancer.server.port=8000"
     environment:
       - APP_ENV=docker
       - DB_CONNECTION=mysql
-      - DB_HOST=db
-      - DB_PORT=3306
+      - DB_HOST=127.0.0.1  
+      - DB_PORT=3307  
       - DB_DATABASE=wintercms
       - DB_USERNAME=root
       - DB_PASSWORD=root
       - PHP_MEMORY_LIMIT=-1
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_healthy 
     mem_limit: 4g
-    command: sh -c "php artisan migrate && php artisan serve --host=0.0.0.0 --port=8001"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wintercms.rule=Host(`localhost`)"  
-      - "traefik.http.services.wintercms.loadbalancer.server.port=8001"
+    command: sh -c "php artisan migrate && php artisan serve --host=0.0.0.0 --port=8000"
     networks:
       - app-network
+      - traefik
 
   db:
     image: mysql:8.0
@@ -34,7 +33,7 @@ services:
       MYSQL_ROOT_PASSWORD: "root"
       MYSQL_DATABASE: wintercms
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
@@ -46,36 +45,19 @@ services:
     networks:
       - app-network
 
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    volumes:
-      - /Users/aidaner/Desktop/tz/nginx/default.conf:/etc/nginx/default.conf
-    ports:
-      - "8080:80"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.nginx.rule=Host(`localhost`)"
-      - "traefik.http.services.nginx.loadbalancer.server.port=80"
-    networks:
-      - app-network
-
   traefik:
-    image: traefik:v2.9
+    image: traefik:v2.10
     container_name: traefik
     command:
-      - "--api.insecure=true"
+      - "--api.insecure=true"  # Enable Traefik dashboard
       - "--providers.docker=true"
-      - "--entryPoints.web.address=:80"  
-      - "--entryPoints.websecure.address=:443"
+      - "--entryPoints.web.address=:80"  # HTTP traffic entry point
     ports:
-      - "80:80"
-      - "443:443"
-      - "8081:8080" 
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "8000:8000"    # HTTP
+      - "8080:8080"  # Traefik dashboard
     networks:
       - app-network
+      - traefik
 
 volumes:
   db_data:
@@ -83,3 +65,5 @@ volumes:
 networks:
   app-network:
     driver: bridge
+  traefik:
+    external: true  # Make sure this network exists, otherwise, create it
